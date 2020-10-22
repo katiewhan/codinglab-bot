@@ -72,7 +72,7 @@ const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 // Cron does time like so:
 // ('<minutes(of 60)> <hours(of 24)> <days(of month)> <months> <year>')
 // * means "every"
-cron.schedule('0 10 * * *', function (err) {
+cron.schedule('0 9 * * *', function (err) {
     if (err) {
       console.log('Cron Job - There was an error ' + error);
     }
@@ -86,13 +86,18 @@ cron.schedule('0 10 * * *', function (err) {
       const data = rawData.data.values;
       const day = new Date().getDay(); //returns 0-6 for Sun-Sat
       const dayName = days[day]
-      const matched = data.filter(counselorInfo => {
-        return (
-          counselorInfo.filter(info => {
-            return info.toLowerCase().search(dayName.toLowerCase()) > -1;
-          }).length > 0
-        );
+
+      let matched = []
+
+      data.forEach((counselorInfo) => {
+        let times = counselorInfo[2].split(', ')
+        times.forEach((time) => {
+          if (time.indexOf(dayName) == 0) {
+            matched.push({ name: counselorInfo[0], hours: time.split(' ')[1], link: counselorInfo[3] });
+          }
+        });
       });
+
       // console.log(`the day is ${dayNum} \nand matched is ${matched}`)
       if (matched.length > 0) {
         // let msg = '```*** New Shifts Starting Now! ***\n\n';
@@ -101,7 +106,7 @@ cron.schedule('0 10 * * *', function (err) {
           .setTitle(`Here\'s who\'s on duty for ${dayName}`);
 
         matched.forEach((counselor, counselorIndex) => {
-          embed.addField(`${counselor[0]} is in the lab ${counselor[2].split(' ')[1]}!`, `Feel free to drop by at ${counselor[3]}`);
+          embed.addField(`${counselor.name} is in the lab ${counselor.hours}!`, `Feel free to drop by at ${counselor.link}`);
         });
 
         embed.addField('\u200b', `If you missed us, you can always make an appointment at ${apptCal}`);
